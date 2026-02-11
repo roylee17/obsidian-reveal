@@ -1,0 +1,29 @@
+From 4d193883a45d5ee7a0462365b6e254a22f581fae Mon Sep 17 00:00:00 2001
+From: Roy Lee <roylee17@gmail.com>
+Date: Wed, 11 Feb 2026 17:47:14 -0500
+Subject: [PATCH] Add plugin: Reveal
+
+---
+ community-plugins.json | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/community-plugins.json b/community-plugins.json
+index 83db0d78..b392622c 100644
+--- a/community-plugins.json
++++ b/community-plugins.json
+@@ -19143,5 +19143,12 @@
+     "author": "Chris Howard",
+     "description": "Provides a customisable raw look in source mode using a monospace font to clearly differentiate from Live Preview.",
+     "repo": "chrishoward-projects/sourcemode-styling"
++  },
++  {
++    "id": "reveal",
++    "name": "Reveal",
++    "author": "Roy Lee",
++    "description": "Show and toggle hidden directories in File Explorer.",
++    "repo": "roylee17/obsidian-reveal"
+   }
+ ]
+-- 
+2.50.1 (Apple Git-155)
+

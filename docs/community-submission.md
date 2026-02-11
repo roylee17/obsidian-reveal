@@ -45,6 +45,20 @@ Then open PR:
 - Select template: `Community Plugin`
 - Complete checklist in PR body.
 
+### Fast path with prepared patch
+
+After forking `obsidianmd/obsidian-releases` to `roylee17/obsidian-releases`:
+
+```bash
+git clone git@github.com:roylee17/obsidian-releases.git
+cd obsidian-releases
+git checkout -b add-plugin-reveal
+git am /Users/roylee/github/roylee17/reveal/docs/obsidian-releases-add-plugin-reveal.patch
+git push -u origin add-plugin-reveal
+```
+
+Then open PR from `roylee17:add-plugin-reveal` to `obsidianmd:master`.
+
 ## 4. After opening PR
 
 - Wait for bot label:
