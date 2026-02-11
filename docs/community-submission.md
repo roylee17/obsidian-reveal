@@ -36,7 +36,7 @@ Append this object to `community-plugins.json`:
   "name": "Reveal",
   "author": "Roy Lee",
   "description": "Show and toggle hidden directories in File Explorer.",
-  "repo": "<your-user-or-org>/reveal"
+  "repo": "roylee17/obsidian-reveal"
 }
 ```
 
