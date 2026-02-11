@@ -1,0 +1,9 @@
+{
+  "id": "reveal",
+  "name": "Reveal",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Show and toggle hidden directories in File Explorer.",
+  "author": "Roy Lee",
+  "isDesktopOnly": true
+}
