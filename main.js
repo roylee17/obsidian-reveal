@@ -123,10 +123,11 @@ var HiddenDirectoryController = class {
     return adapter;
   }
   patchReconcileDeletion(adapter) {
-    const original = adapter.reconcileDeletion;
-    if (typeof original !== "function") {
+    const originalMethod = adapter.reconcileDeletion;
+    if (typeof originalMethod !== "function") {
       return () => void 0;
     }
+    const original = originalMethod.bind(adapter);
     adapter.reconcileDeletion = async (realPath, path) => {
       const normalizedPath = normalizeVaultPath(path);
       const hiddenRoot = this.getHiddenRootPath(normalizedPath);
@@ -139,10 +140,10 @@ var HiddenDirectoryController = class {
         }
         this.trackedHiddenDirectories.delete(hiddenRoot);
       }
-      await original.call(adapter, realPath, path);
+      await original(realPath, path);
     };
     return () => {
-      adapter.reconcileDeletion = original;
+      adapter.reconcileDeletion = originalMethod;
     };
   }
   async showAllHiddenDirectories() {

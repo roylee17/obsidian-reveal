@@ -75,10 +75,11 @@ export class HiddenDirectoryController {
   }
 
   private patchReconcileDeletion(adapter: AdapterLike): () => void {
-    const original = adapter.reconcileDeletion;
-    if (typeof original !== "function") {
+    const originalMethod = adapter.reconcileDeletion;
+    if (typeof originalMethod !== "function") {
       return () => undefined;
     }
+    const original = originalMethod.bind(adapter);
 
     adapter.reconcileDeletion = async (realPath: string, path: string): Promise<void> => {
       const normalizedPath = normalizeVaultPath(path);
@@ -99,11 +100,11 @@ export class HiddenDirectoryController {
         this.trackedHiddenDirectories.delete(hiddenRoot);
       }
 
-      await original.call(adapter, realPath, path);
+      await original(realPath, path);
     };
 
     return () => {
-      adapter.reconcileDeletion = original;
+      adapter.reconcileDeletion = originalMethod;
     };
   }
 
