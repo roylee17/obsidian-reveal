@@ -1,9 +1,12 @@
 import { Notice, Plugin, setIcon } from "obsidian";
 import { HiddenDirectoryController } from "./explorerPatch";
-import { DEFAULT_SETTINGS, normalizeSettings, RevealSettingTab, type RevealSettings } from "./settings";
+import { createDefaultSettings, normalizeSettings, RevealSettingTab, type RevealSettings } from "./settings";
 
 export default class RevealPlugin extends Plugin {
-  public settings: RevealSettings = DEFAULT_SETTINGS;
+  public settings: RevealSettings = {
+    showHiddenDirectories: false,
+    excludedPatterns: []
+  };
   private controller: HiddenDirectoryController | null = null;
   private toggleRibbonEl: HTMLElement | null = null;
 
@@ -29,8 +32,8 @@ export default class RevealPlugin extends Plugin {
     this.updateToggleIcon();
   }
 
-  public override async onunload(): Promise<void> {
-    await this.controller?.stop();
+  public override onunload(): void {
+    void this.controller?.stop();
     this.controller = null;
   }
 
@@ -41,11 +44,9 @@ export default class RevealPlugin extends Plugin {
   }
 
   private async loadSettings(): Promise<void> {
+    const defaults = createDefaultSettings(this.app.vault.configDir);
     const loaded = await this.loadData();
-    this.settings = {
-      ...DEFAULT_SETTINGS,
-      ...normalizeSettings(loaded)
-    };
+    this.settings = normalizeSettings(loaded, defaults);
   }
 
   private async toggleHiddenDirectories(): Promise<void> {

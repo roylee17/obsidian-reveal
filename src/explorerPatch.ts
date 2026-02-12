@@ -3,17 +3,22 @@ import type RevealPlugin from "./main";
 import { getRuntimeModules } from "./runtime";
 import { isHiddenSegment, normalizeVaultPath, shouldRevealDirectory } from "./rules";
 
+interface AdapterStat {
+  isDirectory?: () => boolean;
+  type?: string;
+}
+
 interface AdapterLike {
   basePath?: string;
-  getRealPath?(path: string): string;
-  getFullRealPath?(path: string): string;
-  getFullPath?(path: string): string;
-  reconcileDeletion?(realPath: string, path: string): Promise<void> | void;
-  reconcileFolderCreation?(realPath: string, path: string): Promise<void> | void;
-  reconcileFileInternal?(realPath: string, path: string): Promise<void> | void;
-  reconcileFileChanged?(realPath: string, path: string, stat?: unknown): Promise<void> | void;
+  getRealPath?: (path: string) => string;
+  getFullRealPath?: (path: string) => string;
+  getFullPath?: (path: string) => string;
+  reconcileDeletion?: (realPath: string, path: string) => Promise<void> | void;
+  reconcileFolderCreation?: (realPath: string, path: string) => Promise<void> | void;
+  reconcileFileInternal?: (realPath: string, path: string) => Promise<void> | void;
+  reconcileFileChanged?: (realPath: string, path: string, stat?: AdapterStat) => Promise<void> | void;
   fs?: {
-    stat(path: string): Promise<{ isDirectory?: () => boolean; type?: string } | null>;
+    stat: (path: string) => Promise<AdapterStat | null>;
   };
 }
 
@@ -306,7 +311,7 @@ export class HiddenDirectoryController {
     }
   }
 
-  private async safeFileStat(adapter: AdapterLike, path: string): Promise<unknown | null> {
+  private async safeFileStat(adapter: AdapterLike, path: string): Promise<AdapterStat | null> {
     const fullPath = this.getFullPath(adapter, path);
     if (!fullPath || typeof adapter.fs?.stat !== "function") {
       return null;

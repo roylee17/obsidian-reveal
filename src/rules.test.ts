@@ -4,7 +4,7 @@ import type { RevealSettings } from "./settings";
 
 const settings: RevealSettings = {
   showHiddenDirectories: true,
-  excludedPatterns: [".git/**", ".obsidian/**", "node_modules/**"]
+  excludedPatterns: [".git/**", ".vault-config/**", "node_modules/**"]
 };
 
 describe("normalizeVaultPath", () => {
@@ -35,7 +35,7 @@ describe("matchGlob", () => {
 
 describe("matchesAnyPattern", () => {
   it("checks pattern arrays", () => {
-    expect(matchesAnyPattern(".obsidian/plugins", settings.excludedPatterns)).toBe(true);
+    expect(matchesAnyPattern(".vault-config/plugins", settings.excludedPatterns)).toBe(true);
     expect(matchesAnyPattern("notes/.cache", settings.excludedPatterns)).toBe(false);
   });
 });

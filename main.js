@@ -338,16 +338,23 @@ var HiddenDirectoryController = class {
 
 // src/settings.ts
 var import_obsidian2 = require("obsidian");
-var DEFAULT_SETTINGS = {
-  showHiddenDirectories: false,
-  excludedPatterns: [".git/**", ".obsidian/**", "node_modules/**", ".venv/**"]
-};
-function normalizeSettings(raw) {
+function normalizeConfigDir(configDir) {
+  const normalized = configDir.trim().replace(/^\/+|\/+$/g, "");
+  return normalized.length > 0 ? normalized : ".config";
+}
+function createDefaultSettings(configDir) {
+  const normalizedConfigDir = normalizeConfigDir(configDir);
+  return {
+    showHiddenDirectories: false,
+    excludedPatterns: [".git/**", `${normalizedConfigDir}/**`, "node_modules/**", ".venv/**"]
+  };
+}
+function normalizeSettings(raw, defaults) {
   const candidate = raw ?? {};
-  const excludedPatterns = Array.isArray(candidate.excludedPatterns) ? candidate.excludedPatterns.filter((item) => typeof item === "string").map((item) => item.trim()).filter(Boolean) : DEFAULT_SETTINGS.excludedPatterns;
+  const excludedPatterns = Array.isArray(candidate.excludedPatterns) ? candidate.excludedPatterns.filter((item) => typeof item === "string").map((item) => item.trim()).filter(Boolean) : defaults.excludedPatterns;
   return {
     showHiddenDirectories: Boolean(candidate.showHiddenDirectories),
-    excludedPatterns: excludedPatterns.length > 0 ? excludedPatterns : DEFAULT_SETTINGS.excludedPatterns
+    excludedPatterns: excludedPatterns.length > 0 ? excludedPatterns : defaults.excludedPatterns
   };
 }
 var RevealSettingTab = class extends import_obsidian2.PluginSettingTab {
@@ -358,7 +365,7 @@ var RevealSettingTab = class extends import_obsidian2.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new import_obsidian2.Setting(containerEl).setName("Show hidden directories").setDesc("Display dot-folders in File Explorer.").addToggle((toggle) => {
+    new import_obsidian2.Setting(containerEl).setName("Show hidden directories").setDesc("Display dot-folders in the file explorer.").addToggle((toggle) => {
       toggle.setValue(this.plugin.settings.showHiddenDirectories);
       toggle.onChange(async (value) => {
         this.plugin.settings.showHiddenDirectories = value;
@@ -367,7 +374,9 @@ var RevealSettingTab = class extends import_obsidian2.PluginSettingTab {
     });
     const initialValue = this.plugin.settings.excludedPatterns.join("\n");
     new import_obsidian2.Setting(containerEl).setName("Excluded patterns").setDesc("One glob-like pattern per line. Excluded folders are never shown.").addTextArea((textArea) => {
-      textArea.setPlaceholder(".git/**\n.obsidian/**\nnode_modules/**").setValue(initialValue).onChange(async (value) => {
+      textArea.setPlaceholder(`.git/**
+${this.plugin.app.vault.configDir}/**
+node_modules/**`).setValue(initialValue).onChange(async (value) => {
         this.plugin.settings.excludedPatterns = value.split("\n").map((line) => line.trim()).filter(Boolean);
         await this.plugin.saveSettings();
       });
@@ -381,7 +390,10 @@ var RevealSettingTab = class extends import_obsidian2.PluginSettingTab {
 var RevealPlugin = class extends import_obsidian3.Plugin {
   constructor() {
     super(...arguments);
-    this.settings = DEFAULT_SETTINGS;
+    this.settings = {
+      showHiddenDirectories: false,
+      excludedPatterns: []
+    };
     this.controller = null;
     this.toggleRibbonEl = null;
   }
@@ -402,8 +414,8 @@ var RevealPlugin = class extends import_obsidian3.Plugin {
     });
     this.updateToggleIcon();
   }
-  async onunload() {
-    await this.controller?.stop();
+  onunload() {
+    void this.controller?.stop();
     this.controller = null;
   }
   async saveSettings() {
@@ -412,11 +424,9 @@ var RevealPlugin = class extends import_obsidian3.Plugin {
     this.updateToggleIcon();
   }
   async loadSettings() {
+    const defaults = createDefaultSettings(this.app.vault.configDir);
     const loaded = await this.loadData();
-    this.settings = {
-      ...DEFAULT_SETTINGS,
-      ...normalizeSettings(loaded)
-    };
+    this.settings = normalizeSettings(loaded, defaults);
   }
   async toggleHiddenDirectories() {
     this.settings.showHiddenDirectories = !this.settings.showHiddenDirectories;

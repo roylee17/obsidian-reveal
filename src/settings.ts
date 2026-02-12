@@ -6,20 +6,28 @@ export interface RevealSettings {
   excludedPatterns: string[];
 }
 
-export const DEFAULT_SETTINGS: RevealSettings = {
-  showHiddenDirectories: false,
-  excludedPatterns: [".git/**", ".obsidian/**", "node_modules/**", ".venv/**"]
-};
+function normalizeConfigDir(configDir: string): string {
+  const normalized = configDir.trim().replace(/^\/+|\/+$/g, "");
+  return normalized.length > 0 ? normalized : ".config";
+}
 
-export function normalizeSettings(raw: unknown): RevealSettings {
+export function createDefaultSettings(configDir: string): RevealSettings {
+  const normalizedConfigDir = normalizeConfigDir(configDir);
+  return {
+    showHiddenDirectories: false,
+    excludedPatterns: [".git/**", `${normalizedConfigDir}/**`, "node_modules/**", ".venv/**"]
+  };
+}
+
+export function normalizeSettings(raw: unknown, defaults: RevealSettings): RevealSettings {
   const candidate = (raw ?? {}) as Partial<RevealSettings>;
   const excludedPatterns = Array.isArray(candidate.excludedPatterns)
     ? candidate.excludedPatterns.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean)
-    : DEFAULT_SETTINGS.excludedPatterns;
+    : defaults.excludedPatterns;
 
   return {
     showHiddenDirectories: Boolean(candidate.showHiddenDirectories),
-    excludedPatterns: excludedPatterns.length > 0 ? excludedPatterns : DEFAULT_SETTINGS.excludedPatterns
+    excludedPatterns: excludedPatterns.length > 0 ? excludedPatterns : defaults.excludedPatterns
   };
 }
 
@@ -37,7 +45,7 @@ export class RevealSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Show hidden directories")
-      .setDesc("Display dot-folders in File Explorer.")
+      .setDesc("Display dot-folders in the file explorer.")
       .addToggle((toggle) => {
         toggle.setValue(this.plugin.settings.showHiddenDirectories);
         toggle.onChange(async (value) => {
@@ -52,7 +60,7 @@ export class RevealSettingTab extends PluginSettingTab {
       .setDesc("One glob-like pattern per line. Excluded folders are never shown.")
       .addTextArea((textArea) => {
         textArea
-          .setPlaceholder(".git/**\n.obsidian/**\nnode_modules/**")
+          .setPlaceholder(`.git/**\n${this.plugin.app.vault.configDir}/**\nnode_modules/**`)
           .setValue(initialValue)
           .onChange(async (value) => {
             this.plugin.settings.excludedPatterns = value
